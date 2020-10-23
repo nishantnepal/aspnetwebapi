@@ -22,6 +22,10 @@ namespace aspnetwebapi
                 {
                     config.AddEnvironmentVariables();
                 })
+                .ConfigureLogging((hostingContext, logging) =>
+                {
+                    logging.AddConsole();
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();

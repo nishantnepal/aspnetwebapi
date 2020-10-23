@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -49,9 +50,9 @@ namespace aspnetwebapi
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             
-            app.UsePathBase($"/{_version}");
+            //app.UsePathBase($"/{_version}");
 
             app.UseSwagger();
             app.UseSwaggerUI(c =>
@@ -64,16 +65,26 @@ namespace aspnetwebapi
 
             app.UseAuthorization();
 
+            app.Use(async (context, next) =>
+            {
+                await next();
+                if (context.Response.StatusCode == 404)
+                {
+                    var requestUrl = context.Request.GetDisplayUrl();
+                    await context.Response.WriteAsync($"Oops - {requestUrl} - {Environment.MachineName} - does not exist");
+                }
+            });
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
                 endpoints.MapGet($"/ping-live", async context =>
                 {
-                    await context.Response.WriteAsync("Live");
+                    await context.Response.WriteAsync($"Live - {Environment.MachineName}");
                 }).WithMetadata(new AllowAnonymousAttribute());
                 endpoints.MapGet($"/ping-ready", async context =>
                 {
-                    await context.Response.WriteAsync("Ready");
+                    await context.Response.WriteAsync($"Ready - {Environment.MachineName}");
                 }).WithMetadata(new AllowAnonymousAttribute());
             });
         }
